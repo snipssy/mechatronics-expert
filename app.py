@@ -1,34 +1,42 @@
 import streamlit as st
+from langchain_groq import ChatGroq
 
-# إعدادات تخلي الصفحة واسعة ومرتبة للجوال
+# إعدادات الصفحة
 st.set_page_config(page_title="Mecha Tutor", layout="centered")
 
-# تنسيق يحذف القائمة الجانبية تماماً ويرتب الخط
+# إخفاء القائمة الجانبية وتنسيق الجوال
 st.markdown("""<style>
-    /* إخفاء زر القائمة الجانبية والقائمة نفسها */
     [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none; }
     body { direction: RTL; text-align: right; }
-    .stChatInputContainer { padding-bottom: 20px; }
     h1 { font-size: 22px !important; text-align: center; color: #0084ff; }
 </style>""", unsafe_allow_html=True)
 
-st.title("👨‍🏫 المدرس الخصوصي")
+st.title("👨‍🏫 المدرس الخصوصي الذكي")
 
-# نظام المحادثة البسيط والمستقر
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "هلا يا مهندس! أنا مدرسك الخصوصي، اسألني عن أي شيء وأبشر بالشرح."}]
+# ربط الذكاء (حط مفتاحك هنا مباشرة بين القوسين عشان يشتغل لخويك فوراً)
+# أو خليه يطلبه مرة واحدة
+api_key = st.text_input("أدخل مفتاح Groq لبدء التفكير:", type="password")
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+if api_key:
+    llm = ChatGroq(groq_api_key=api_key, model_name="llama-3.1-70b-versatile")
 
-if prompt := st.chat_input("اكتب سؤالك هنا..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    with st.chat_message("assistant"):
-        # رد مباشر وذكي (يرجع يشتغل زي الحلاوة)
-        response = f"بخصوص سؤالك عن '{prompt}'، الشرح هو: (أنا الآن في وضع الاستعداد، اسألني أي سؤال هندسي)."
-        st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("اسألني أي شيء في الميكاترونكس..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            # هنا "التفكير" الحقيقي
+            instruction = "أنت مدرس هندسة ميكاترونكس خبير. اشرح بأسلوب تعليمي مفصل."
+            response = llm.invoke(f"{instruction}\n\nالسؤال: {prompt}")
+            st.markdown(response.content)
+            st.session_state.messages.append({"role": "assistant", "content": response.content})
+else:
+    st.info("أدخل المفتاح لمرة واحدة فقط لتفعيل 'عقل' المدرس.")
