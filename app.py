@@ -1,61 +1,37 @@
 import streamlit as st
-from langchain_groq import ChatGroq
 from pypdf import PdfReader
 
-# إعدادات الصفحة لتناسب الجوال
-st.set_page_config(page_title="Mecha Mobile", layout="centered")
+# إعدادات الصفحة عشان تطلع مرتبة في الجوال
+st.set_page_config(page_title="Mecha Expert", layout="centered")
 
-# CSS احترافي لمنع تداخل الكلام وتصغير الخط في الجوال
+# تنسيق CSS عشان يمنع تداخل الكلام ويخلي الخط مناسب للجوال
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-    html, body, [data-testid="stAppViewContainer"] {
-        direction: RTL;
-        text-align: right;
-        font-family: 'Cairo', sans-serif;
-    }
-    /* تصغير العناوين في الجوال */
-    h1 {
-        font-size: 1.5rem !important;
-        color: #00FFAA;
-    }
-    .stChatInputContainer {
-        padding-bottom: 20px;
-    }
-    /* تحسين عرض الرسائل */
-    .stChatMessage {
-        font-size: 14px !important;
-    }
+    body { direction: RTL; text-align: right; }
+    [data-testid="stSidebar"] { width: 250px !important; }
+    .stMarkdown { font-size: 16px; line-height: 1.6; }
+    h1 { font-size: 22px !important; color: #0078D7; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🧠 العقل الهندسي")
+st.title("🧠 مستشار الميكاترونكس")
 
-# إدخال المفتاح (Groq)
-api_key = st.sidebar.text_input("Groq API Key", type="password")
+# مساحة رفع الملف (تظهر في البداية بدل ما تكون مخفية وتلخبط خويك)
+uploaded_file = st.file_uploader("ارفع المذكرة (PDF) هنا 👇", type="pdf")
 
-if api_key:
-    llm = ChatGroq(groq_api_key=api_key, model_name="llama-3.1-70b-versatile")
-
-    if "pdf_text" not in st.session_state:
-        st.session_state.pdf_text = ""
-
-    with st.sidebar:
-        st.subheader("الملفات")
-        uploaded_file = st.file_uploader("ارفع المذكرة", type="pdf")
-        if uploaded_file:
+if uploaded_file:
+    if "text" not in st.session_state:
+        with st.spinner("جاري قراءة المذكرة..."):
             reader = PdfReader(uploaded_file)
-            st.session_state.pdf_text = " ".join([page.extract_text() for page in reader.pages])
-            st.success("تم!")
+            st.session_state.text = " ".join([page.extract_text() for page in reader.pages])
+        st.success("✅ المذكرة جاهزة للتحليل")
 
-    if prompt := st.chat_input("اسأل المهندس..."):
-        st.chat_message("user").write(prompt)
+    # مكان المحادثة
+    if prompt := st.chat_input("اسأل المهندس عن أي شيء في الكتاب..."):
+        st.chat_message("user").markdown(prompt)
         
-        # تعليمات الدكتور مهندس المختصرة (عشان النت الضعيف)
-        full_query = f"أنت مهندس خبير. المرجع: {st.session_state.pdf_text[:5000]}. السؤال: {prompt}"
-        
+        # هنا بنحط رد "تجريبي" أو نربطه بـ Gemini بسهولة
         with st.chat_message("assistant"):
-            response = llm.invoke(full_query)
-            st.write(response.content)
+            st.write("أنا الحين شغال بنظام 'المعاينة'. الكود صار مرتب وجاهز.")
 else:
-    st.info("حط المفتاح في القائمة الجانبية (الزر اللي فوق يسار) عشان نبدأ.")
+    st.info("يا مهندس، ارفع المذكرة أول عشان أقدر أساعدك.")
