@@ -17,12 +17,9 @@ api_key = st.sidebar.text_input("أدخل مفتاح Google API", type="password
 if api_key:
     try:
         genai.configure(api_key=api_key)
-        # استخدمنا نسخة latest لضمان عدم حدوث خطأ NotFound
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # هذا هو المسمى الرسمي والمستقر حالياً
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        if "chat" not in st.session_state:
-            st.session_state.chat = model.start_chat(history=[])
-
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
@@ -36,13 +33,13 @@ if api_key:
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                # طلب الشرح المفصل
-                full_prompt = f"أنت مدرس خصوصي خبير ومحفز. اشرح بأسلوب تعليمي مفصل مع أمثلة عملية: {prompt}"
-                response = st.session_state.chat.send_message(full_prompt)
+                # طلب الشرح بأسلوب المدرس
+                full_prompt = f"أنت مدرس خصوصي خبير. اشرح بأسلوب تعليمي مفصل وخطوات واضحة: {prompt}"
+                response = model.generate_content(full_prompt)
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
                 
     except Exception as e:
-        st.error(f"حدث خطأ في الاتصال: {e}")
+        st.error(f"تنبيه: تأكد من صحة المفتاح أو جرب لاحقاً. الخطأ: {e}")
 else:
-    st.info(" في القائمة الجانبية حط API.")
+    st.info("API في القائمة الجانبية.")
